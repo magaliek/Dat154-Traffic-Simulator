@@ -10,6 +10,8 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+TrafficLight trafficLight(0, 50, 50, 50, 100, 50, 150);
+RECT rect = { 50, 50, 100, 200 };
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -146,8 +148,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
+
+            Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+            HBRUSH hBrush = CreateSolidBrush(trafficLight.trafficLightColors[trafficLight.m_index]);
+            if (trafficLight.m_index == 0) {
+                Ellipse(hdc, 50, 100, 100, 150);
+                Ellipse(hdc, 50, 150, 100, 200);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+                Ellipse(hdc, 50, 50, 100, 100);
+            }
+            else if (trafficLight.m_index == 1) {
+                Ellipse(hdc, 50, 50, 100, 100);
+                Ellipse(hdc, 50, 150, 100, 200);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+                Ellipse(hdc, 50, 100, 100, 150);
+            } else if (trafficLight.m_index == 2) {
+                Ellipse(hdc, 50, 50, 100, 100);
+                Ellipse(hdc, 50, 100, 100, 150);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+                Ellipse(hdc, 50, 150, 100, 200);
+			}
+
+			DeleteObject(hBrush);
+
             EndPaint(hWnd, &ps);
+        }
+        break;
+    case WM_LBUTTONDOWN:
+        {
+            trafficLight.m_index = (trafficLight.m_index + 1) % 3;
+
+			InvalidateRect(hWnd, &rect, TRUE);
         }
         break;
     case WM_DESTROY:
