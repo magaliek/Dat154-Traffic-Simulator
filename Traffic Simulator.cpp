@@ -134,6 +134,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+        {
+        SetTimer(hWnd, trafficLight.m_id, 3000, NULL);
+        SetTimer(hWnd, trafficLight2.m_id, 3000, NULL);
+        break;
+        }
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -156,11 +162,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
 
+            RECT windowRc;
+            GetClientRect(hWnd, &windowRc);
+
             // Draw roads 
             HBRUSH roadBrush = CreateSolidBrush(RGB(80, 80, 80));
             HGDIOBJ oldRoadBrush = SelectObject(hdc, roadBrush);
-            Rectangle(hdc, 350, 0, 450, 800);   // Vertical road 
-            Rectangle(hdc, 0, 250, 800, 350);   // Horizontal road 
+            Rectangle(hdc, 350, windowRc.top, 450, windowRc.bottom);   // Vertical road 
+            Rectangle(hdc, windowRc.left, 250, windowRc.right, 350);   // Horizontal road 
             SelectObject(hdc, oldRoadBrush);
             DeleteObject(roadBrush);
 
@@ -199,15 +208,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
-    case WM_LBUTTONDOWN:
+    case WM_TIMER:
         {
-            trafficLight.m_index = (trafficLight.m_index + 1) % 4;
-            trafficLight2.m_index = (trafficLight2.m_index + 1) % 4;
-
             InvalidateRect(hWnd, NULL, TRUE);
+
+            if (wParam == trafficLight.m_id) {
+                trafficLight.m_index = (trafficLight.m_index + 1) % 4;
+                int nextInterval = (trafficLight.m_index % 2 == 1) ? 2000 : 4000;
+                SetTimer(hWnd, trafficLight.m_id, nextInterval, NULL);
+            }
+            else if (wParam == trafficLight2.m_id) {
+                trafficLight2.m_index = (trafficLight2.m_index + 1) % 4;
+                int nextInterval = (trafficLight2.m_index % 2 == 1) ? 2000 : 4000;
+                SetTimer(hWnd, trafficLight2.m_id, nextInterval, NULL);
+            }
         }
         break;
     case WM_DESTROY:
+        KillTimer(hWnd, trafficLight.m_id);
+        KillTimer(hWnd, trafficLight2.m_id);
         PostQuitMessage(0);
         break;
     default:
