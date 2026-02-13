@@ -11,6 +11,7 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 TrafficLight trafficLight(0, 50, 50, 50, 100, 50, 150);
+TrafficLight trafficLight2(2, 200, 360, 250, 360, 300, 360);
 RECT rect = { 50, 50, 100, 200 };
 
 // Forward declarations of functions included in this code module:
@@ -149,36 +150,107 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
 
-            Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
-            HBRUSH hBrush = CreateSolidBrush(trafficLight.trafficLightColors[trafficLight.m_index]);
-            if (trafficLight.m_index == 0) {
-                Ellipse(hdc, 50, 100, 100, 150);
-                Ellipse(hdc, 50, 150, 100, 200);
-                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
-                Ellipse(hdc, 50, 50, 100, 100);
-            }
-            else if (trafficLight.m_index == 1) {
-                Ellipse(hdc, 50, 50, 100, 100);
-                Ellipse(hdc, 50, 150, 100, 200);
-                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
-                Ellipse(hdc, 50, 100, 100, 150);
-            } else if (trafficLight.m_index == 2) {
-                Ellipse(hdc, 50, 50, 100, 100);
-                Ellipse(hdc, 50, 100, 100, 150);
-                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
-                Ellipse(hdc, 50, 150, 100, 200);
-			}
+            // Draw roads 
+            HBRUSH roadBrush = CreateSolidBrush(RGB(80, 80, 80));
+            HGDIOBJ oldRoadBrush = SelectObject(hdc, roadBrush);
+            Rectangle(hdc, 350, 0, 450, 800);   // Vertical road 
+            Rectangle(hdc, 0, 250, 800, 350);   // Horizontal road 
+            SelectObject(hdc, oldRoadBrush);
+            DeleteObject(roadBrush);
 
-			DeleteObject(hBrush);
+            // Traffic light 1 
+            Rectangle(hdc, 295, 95, 345, 245);
+            HBRUSH hBrush = CreateSolidBrush(trafficLight.trafficLightColors[trafficLight.m_index]);
+
+            if (trafficLight.m_index == 0) {
+                // Red
+                Ellipse(hdc, 300, 150, 340, 190);
+                Ellipse(hdc, 300, 195, 340, 235);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+                Ellipse(hdc, 300, 100, 340, 140);
+                SelectObject(hdc, oldBrush);
+            }   
+            else if (trafficLight.m_index == 1) {
+                // Red + Yellow
+                Ellipse(hdc, 300, 195, 340, 235);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+                Ellipse(hdc, 300, 100, 340, 140);
+                HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
+                SelectObject(hdc, yellowBrush);
+                Ellipse(hdc, 300, 150, 340, 190);
+                SelectObject(hdc, oldBrush);
+                DeleteObject(yellowBrush);
+            }
+            else if (trafficLight.m_index == 2) {
+                // Green
+                Ellipse(hdc, 300, 100, 340, 140);
+                Ellipse(hdc, 300, 150, 340, 190);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+                Ellipse(hdc, 300, 195, 340, 235);
+                SelectObject(hdc, oldBrush);
+            }
+            else if (trafficLight.m_index == 3) {
+                // Yellow
+                Ellipse(hdc, 300, 100, 340, 140);
+                Ellipse(hdc, 300, 195, 340, 235);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
+                Ellipse(hdc, 300, 150, 340, 190);
+                SelectObject(hdc, oldBrush);
+            }
+
+            DeleteObject(hBrush);
+
+            // Traffic light 2 
+            Rectangle(hdc, 195, 355, 345, 405);
+            HBRUSH hBrush2 = CreateSolidBrush(trafficLight2.trafficLightColors[trafficLight2.m_index]);
+
+            if (trafficLight2.m_index == 0) {
+                // Red
+                Ellipse(hdc, 250, 360, 290, 400);
+                Ellipse(hdc, 300, 360, 340, 400);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush2);
+                Ellipse(hdc, 200, 360, 240, 400);
+                SelectObject(hdc, oldBrush);
+            }
+            else if (trafficLight2.m_index == 1) {
+                // Red + Yellow
+                Ellipse(hdc, 300, 360, 340, 400);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush2);
+                Ellipse(hdc, 200, 360, 240, 400);
+                HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
+                SelectObject(hdc, yellowBrush);
+                Ellipse(hdc, 250, 360, 290, 400);
+                SelectObject(hdc, oldBrush);
+                DeleteObject(yellowBrush);
+            }
+            else if (trafficLight2.m_index == 2) {
+                // Green
+                Ellipse(hdc, 200, 360, 240, 400);
+                Ellipse(hdc, 250, 360, 290, 400);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush2);
+                Ellipse(hdc, 300, 360, 340, 400);
+                SelectObject(hdc, oldBrush);
+            }
+            else if (trafficLight2.m_index == 3) {
+                // Yellow
+                Ellipse(hdc, 200, 360, 240, 400);
+                Ellipse(hdc, 300, 360, 340, 400);
+                HGDIOBJ oldBrush = SelectObject(hdc, hBrush2);
+                Ellipse(hdc, 250, 360, 290, 400);
+                SelectObject(hdc, oldBrush);
+            }
+
+            DeleteObject(hBrush2);
 
             EndPaint(hWnd, &ps);
         }
         break;
     case WM_LBUTTONDOWN:
         {
-            trafficLight.m_index = (trafficLight.m_index + 1) % 3;
+            trafficLight.m_index = (trafficLight.m_index + 1) % 4;
+            trafficLight2.m_index = (trafficLight.m_index + 2) % 4;
 
-			InvalidateRect(hWnd, &rect, TRUE);
+            InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
     case WM_DESTROY:
