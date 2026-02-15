@@ -14,10 +14,10 @@ TrafficLight trafficLight(0, 1, 50, 50, 50, 100, 50, 150);
 TrafficLight trafficLight2(2, 2, 200, 360, 250, 360, 300, 360);
 RECT rect = { 50, 50, 100, 200 };
 COLORREF trafficLightColors[4][3] = {
-    {RGB(255, 0, 0), RGB(50, 50, 50), RGB(50, 50, 50)},    // red
-    {RGB(255, 0, 0), RGB(255, 255, 0), RGB(50, 50, 50)},  // red + yellow
-    {RGB(50, 50, 50), RGB(50, 50, 50), RGB(0, 255, 0)},   // green
-	{RGB(50, 50, 50), RGB(255, 255, 0), RGB(50, 50, 50)}  // yellow
+    {RGB(200, 50, 0), RGB(50, 50, 50), RGB(50, 50, 50)},    // red
+    {RGB(200, 50, 0), RGB(255, 200, 0), RGB(50, 50, 50)},   // red + yellow
+    {RGB(50, 50, 50), RGB(50, 50, 50), RGB(25, 255, 25)},   // green
+	{RGB(50, 50, 50), RGB(255, 200, 0), RGB(50, 50, 50)}    // yellow
 };
 std::vector<Car> cars;
 #define TIMER_CARS 3
