@@ -21,9 +21,14 @@ COLORREF trafficLightColors[4][3] = {
 };
 std::vector<Car> cars;
 #define TIMER_CARS 3
+#define TIMER_AUTO 4
 #define CAR_SIZE 30
 #define CAR_SPEED 4
-#define CAR_GAP 15 
+#define CAR_GAP 15
+
+// probability
+int pw = 50; 
+int pn = 50; 
 
 
 // Forward declarations of functions included in this code module:
@@ -31,6 +36,7 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    Settings(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -145,6 +151,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         SetTimer(hWnd, trafficLight.m_id, 3000, NULL);
         SetTimer(hWnd, trafficLight2.m_id, 3000, NULL);
         SetTimer(hWnd, TIMER_CARS, 30, NULL);
+        SetTimer(hWnd, TIMER_AUTO, 1000, NULL);
         break;
         }
     case WM_COMMAND:
@@ -155,6 +162,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                break;
+            case IDM_SETTINGS:
+                DialogBox(hInst, MAKEINTRESOURCE(IDD_SETTINGS), hWnd, Settings);
                 break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
@@ -304,6 +314,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     return c.x > 1500 || c.y > 1500;
                 });
             }
+            else if (wParam == TIMER_AUTO) {
+                if (rand() % 100 < pw)
+                    cars.push_back(Car(-CAR_SIZE, 285, EAST));
+                if (rand() % 100 < pn)
+                    cars.push_back(Car(385, -CAR_SIZE, SOUTH));
+            }
             else if (wParam == trafficLight.m_id) {
                 trafficLight.m_index = (trafficLight.m_index + 1) % 4;
                 int nextInterval = (trafficLight.m_index % 2 == 1) ? 2000 : 4000;
@@ -330,13 +346,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
-
+        //Arrow keys for probabilty
+    case WM_KEYDOWN:
+        {
+            switch (wParam)
+            {
+            case VK_RIGHT:
+                pw = min(100, pw + 10);
+                break;
+            case VK_LEFT:
+                pw = max(0, pw - 10);
+                break;
+            case VK_UP:
+                pn = min(100, pn + 10);
+                break;
+            case VK_DOWN:
+                pn = max(0, pn - 10);
+                break;
+            }
+        }
+        break;
     case WM_ERASEBKGND:
         return 1;
     case WM_DESTROY:
         KillTimer(hWnd, trafficLight.m_id);
         KillTimer(hWnd, trafficLight2.m_id);
         KillTimer(hWnd, TIMER_CARS);
+        KillTimer(hWnd, TIMER_AUTO);
         PostQuitMessage(0);
         break;
     default:
@@ -358,6 +394,33 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
         {
             EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+        break;
+    }
+    return (INT_PTR)FALSE;
+}
+
+// Message handler for settings dialog
+INT_PTR CALLBACK Settings(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        SetDlgItemInt(hDlg, IDC_EDIT_PW, pw, FALSE);
+        SetDlgItemInt(hDlg, IDC_EDIT_PN, pn, FALSE);
+        return (INT_PTR)TRUE;
+
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDOK) {
+            pw = GetDlgItemInt(hDlg, IDC_EDIT_PW, NULL, FALSE);
+            pn = GetDlgItemInt(hDlg, IDC_EDIT_PN, NULL, FALSE);
+            EndDialog(hDlg, IDOK);
+            return (INT_PTR)TRUE;
+        }
+        if (LOWORD(wParam) == IDCANCEL) {
+            EndDialog(hDlg, IDCANCEL);
             return (INT_PTR)TRUE;
         }
         break;
