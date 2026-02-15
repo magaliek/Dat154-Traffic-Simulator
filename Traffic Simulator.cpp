@@ -14,11 +14,17 @@ TrafficLight trafficLight(0, 1, 50, 50, 50, 100, 50, 150);
 TrafficLight trafficLight2(2, 2, 200, 360, 250, 360, 300, 360);
 RECT rect = { 50, 50, 100, 200 };
 COLORREF trafficLightColors[4][3] = {
-        {RGB(255, 0, 0), RGB(255, 255, 255), RGB(255, 255, 255)}, //red
-        {RGB(255, 0, 0), RGB(255, 255, 0), RGB(255, 255, 255)}, //red + yellow
-        {RGB(255, 255, 255), RGB(255, 255, 255), RGB(0, 255, 0)}, //green
-        {RGB(255, 255, 255), RGB(0, 255, 0), RGB(255, 255, 0)} //green + yellow
+    {RGB(255, 0, 0), RGB(50, 50, 50), RGB(50, 50, 50)},    // red
+    {RGB(255, 0, 0), RGB(255, 255, 0), RGB(50, 50, 50)},  // red + yellow
+    {RGB(50, 50, 50), RGB(50, 50, 50), RGB(0, 255, 0)},   // green
+	{RGB(50, 50, 50), RGB(255, 255, 0), RGB(50, 50, 50)}  // yellow
 };
+std::vector<Car> cars;
+#define TIMER_CARS 3
+#define CAR_SIZE 30
+#define CAR_SPEED 4
+#define CAR_GAP 15 
+
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -138,6 +144,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         SetTimer(hWnd, trafficLight.m_id, 3000, NULL);
         SetTimer(hWnd, trafficLight2.m_id, 3000, NULL);
+        SetTimer(hWnd, TIMER_CARS, 30, NULL);
         break;
         }
     case WM_COMMAND:
@@ -165,54 +172,139 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             RECT windowRc;
             GetClientRect(hWnd, &windowRc);
 
-            // Draw roads 
+			// Double buffer to fix flickering
+            HDC memDC = CreateCompatibleDC(hdc);
+            HBITMAP memBitmap = CreateCompatibleBitmap(hdc, windowRc.right, windowRc.bottom);
+            HGDIOBJ oldBitmap = SelectObject(memDC, memBitmap);
+            FillRect(memDC, &windowRc, (HBRUSH)(COLOR_WINDOW + 1));
+
+            // Remove borders from shapes
+            HPEN pen = CreatePen(PS_NULL, 0, 0);
+            HGDIOBJ oldPen = SelectObject(memDC, pen);
+
+            // Draw roads
             HBRUSH roadBrush = CreateSolidBrush(RGB(80, 80, 80));
-            HGDIOBJ oldRoadBrush = SelectObject(hdc, roadBrush);
-            Rectangle(hdc, 350, windowRc.top, 450, windowRc.bottom);   // Vertical road 
-            Rectangle(hdc, windowRc.left, 250, windowRc.right, 350);   // Horizontal road 
-            SelectObject(hdc, oldRoadBrush);
+            HGDIOBJ oldBrush = SelectObject(memDC, roadBrush);
+            Rectangle(memDC, 350, windowRc.top, 450, windowRc.bottom);
+            Rectangle(memDC, windowRc.left, 250, windowRc.right, 350);
+            SelectObject(memDC, oldBrush);
             DeleteObject(roadBrush);
 
+            // Traffic light boxes 
+            HBRUSH blackBrush = CreateSolidBrush(RGB(35, 35, 35));
+            oldBrush = SelectObject(memDC, blackBrush);
+            RoundRect(memDC, 295, 95, 345, 245, 10, 10);
+            RoundRect(memDC, 195, 355, 345, 405, 10, 10);
+            SelectObject(memDC, oldBrush);
+            DeleteObject(blackBrush);
+
+            // Grey circles
+            HBRUSH greyBrush = CreateSolidBrush(RGB(125, 125, 125));
+            oldBrush = SelectObject(memDC, greyBrush);
+            Ellipse(memDC, 300, 100, 340, 140);
+            Ellipse(memDC, 300, 150, 340, 190);
+            Ellipse(memDC, 300, 200, 340, 240);
+            Ellipse(memDC, 200, 360, 240, 400);
+            Ellipse(memDC, 250, 360, 290, 400);
+            Ellipse(memDC, 300, 360, 340, 400);
+            SelectObject(memDC, oldBrush);
+            DeleteObject(greyBrush);
+
             // Traffic light 1 
-            Rectangle(hdc, 300, 100, 350, 250);
-
-            //ellipse position
-            int lightPositions1[4] = { 300, 100, 350, 150 };
-
-            //improved the logic for iteration
+            int lightPositions1[4] = { 300, 100, 340, 140 };
             for (auto& color : trafficLightColors[trafficLight.m_index]) {
                 HBRUSH hBrush = CreateSolidBrush(color);
-                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
-                Ellipse(hdc, lightPositions1[0], lightPositions1[1], lightPositions1[2], lightPositions1[3]);
+                oldBrush = SelectObject(memDC, hBrush);
+                Ellipse(memDC, lightPositions1[0], lightPositions1[1], lightPositions1[2], lightPositions1[3]);
                 lightPositions1[1] += 50;
                 lightPositions1[3] += 50;
-                SelectObject(hdc, oldBrush);
+                SelectObject(memDC, oldBrush);
                 DeleteObject(hBrush);
             }
 
             // Traffic light 2 
-            Rectangle(hdc, 200, 350, 350, 400);
-
-            int lightPositions2[4] = { 200, 350, 250, 400 };
-
+            int lightPositions2[4] = { 200, 360, 240, 400 };
             for (auto& color : trafficLightColors[trafficLight2.m_index]) {
                 HBRUSH hBrush = CreateSolidBrush(color);
-                HGDIOBJ oldBrush = SelectObject(hdc, hBrush);
-                Ellipse(hdc, lightPositions2[0], lightPositions2[1], lightPositions2[2], lightPositions2[3]);
+                oldBrush = SelectObject(memDC, hBrush);
+                Ellipse(memDC, lightPositions2[0], lightPositions2[1], lightPositions2[2], lightPositions2[3]);
                 lightPositions2[0] += 50;
                 lightPositions2[2] += 50;
-                SelectObject(hdc, oldBrush);
+                SelectObject(memDC, oldBrush);
                 DeleteObject(hBrush);
             }
+
+            // Draw cars
+            for (auto& car : cars) {
+                HBRUSH carBrush = CreateSolidBrush(car.color);
+                HGDIOBJ oldBRush = SelectObject(memDC, carBrush);
+
+                if (car.dir == SOUTH) {
+                    Rectangle(memDC, car.x, car.y, car.x + CAR_SIZE, car.y + CAR_SIZE + 10);
+                }
+                else {
+                    Rectangle(memDC, car.x, car.y, car.x + CAR_SIZE + 10, car.y + CAR_SIZE);
+                }
+
+                SelectObject(memDC, oldBRush);
+                DeleteObject(carBrush);
+            }
+
+            SelectObject(memDC, oldPen);
+            DeleteObject(pen);
+
+            // Copy buffer to screen
+            BitBlt(hdc, 0, 0, windowRc.right, windowRc.bottom, memDC, 0, 0, SRCCOPY);
+
+            SelectObject(memDC, oldBitmap);
+            DeleteObject(memBitmap);
+            DeleteDC(memDC);
 
             EndPaint(hWnd, &ps);
         }
         break;
     case WM_TIMER:
         {
-            InvalidateRect(hWnd, NULL, TRUE);
+            if (wParam == TIMER_CARS) {
+                for (size_t i = 0; i < cars.size(); i++) {
+                    bool canDrive = true;
 
-            if (wParam == trafficLight.m_id) {
+                    // Check for traffic light
+                    if (cars[i].dir == SOUTH) {
+                        if (trafficLight.m_index != 2 && cars[i].y + CAR_SIZE >= 220 && cars[i].y < 220) {
+                            canDrive = false;
+                        }
+                    }
+                    else {
+                        if (trafficLight2.m_index != 2 && cars[i].x + CAR_SIZE >= 320 && cars[i].x < 320) {
+                            canDrive = false;
+                        }
+                    }
+
+                    // Checking for cars in front
+                    for (size_t j = 0; j < cars.size(); j++) {
+                        if (i == j) continue;
+                        if (cars[i].dir == cars[j].dir) {
+                            int dist = (cars[i].dir == SOUTH) ? cars[j].y - cars[i].y : cars[j].x - cars[i].x;
+                            if (dist > 0 && dist < CAR_SIZE + CAR_GAP) {
+                                canDrive = false;
+                            }
+                        }
+                    }
+
+                    // Move car if possible
+                    if (canDrive) {
+                        if (cars[i].dir == SOUTH) cars[i].y += CAR_SPEED;
+                        else cars[i].x += CAR_SPEED;
+                    }
+                }
+
+                // Remove off-screen cars
+                std::erase_if(cars, [](const Car& c) {
+                    return c.x > 1500 || c.y > 1500;
+                });
+            }
+            else if (wParam == trafficLight.m_id) {
                 trafficLight.m_index = (trafficLight.m_index + 1) % 4;
                 int nextInterval = (trafficLight.m_index % 2 == 1) ? 2000 : 4000;
                 SetTimer(hWnd, trafficLight.m_id, nextInterval, NULL);
@@ -222,11 +314,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int nextInterval = (trafficLight2.m_index % 2 == 1) ? 2000 : 4000;
                 SetTimer(hWnd, trafficLight2.m_id, nextInterval, NULL);
             }
+
+            InvalidateRect(hWnd, NULL, TRUE);
         }
         break;
+    case WM_LBUTTONDOWN:
+        {
+            cars.push_back(Car(-CAR_SIZE, 285, EAST));
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+    case WM_RBUTTONDOWN:
+        {
+            cars.push_back(Car(385, -CAR_SIZE, SOUTH));
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        break;
+
+    case WM_ERASEBKGND:
+        return 1;
     case WM_DESTROY:
         KillTimer(hWnd, trafficLight.m_id);
         KillTimer(hWnd, trafficLight2.m_id);
+        KillTimer(hWnd, TIMER_CARS);
         PostQuitMessage(0);
         break;
     default:
